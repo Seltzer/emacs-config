@@ -4,6 +4,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(column-number-mode t)
  '(ecb-layout-window-sizes (quote (("left14" (ecb-directories-buffer-name 0.22682926829268293 . 0.6885245901639344) (ecb-history-buffer-name 0.22682926829268293 . 0.2459016393442623)))))
  '(ecb-options-version "2.40")
  '(ecb-primary-secondary-mouse-buttons (quote mouse-1--C-mouse-1))
@@ -16,6 +17,9 @@
  ;; If there is more than one, they won't work right.
  )
 
+
+;; Load theme
+(load-theme 'deeper-blue)
 
 ;; Fix tabs
 (setq tab-width 4)
@@ -138,7 +142,29 @@
 
 
 
+;; Extend projectile
+(defun projectile-non-project-buffers ()
+  "Get a list of non-project buffers."
+  (let* ((project-root (projectile-project-root))
+	 (all-buffers (-filter (lambda (buffer)
+				 (and
+				  (buffer-file-name buffer)
+				  (not (projectile-project-buffer-p buffer project-root))))
+                               (buffer-list))))
+    (if projectile-buffers-filter-function
+        (funcall projectile-buffers-filter-function all-buffers)
+      all-buffers)))
 
 
-
+(defun projectile-kill-other-buffers ()
+  "Kill all non-project buffers."
+  (interactive)
+  (let ((name (projectile-project-name))
+        (buffers (projectile-non-project-buffers)))
+    (if (yes-or-no-p
+         (format "Are you sure you want to kill %d buffer(s) outside '%s'? "
+                 (length buffers) name))
+        ;; we take care not to kill indirect buffers directly
+        ;; as we might encounter them after their base buffers are killed
+        (mapc 'kill-buffer (-remove 'buffer-base-buffer buffers)))))
 
