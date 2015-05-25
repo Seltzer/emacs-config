@@ -5,6 +5,8 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(column-number-mode t)
+ '(js2-basic-offset 4)  
+ '(js2-bounce-indent-p t)
  '(ecb-layout-window-sizes (quote (("left14" (ecb-directories-buffer-name 0.22682926829268293 . 0.6885245901639344) (ecb-history-buffer-name 0.22682926829268293 . 0.2459016393442623)))))
  '(ecb-options-version "2.40")
  '(ecb-primary-secondary-mouse-buttons (quote mouse-1--C-mouse-1))
@@ -22,8 +24,9 @@
 (load-theme 'deeper-blue)
 
 ;; Fix tabs
-(setq tab-width 4)
-
+(setq-default tab-width 4)
+(setq-default c-basic-offset 4)
+(setq-default indent-tabs-mode t)
 
 ;; Set general environment variables
 
@@ -33,10 +36,18 @@
 ;;   Set CYGWIN path - INJECT
 (when (string-equal system-type "windows-nt")
 (progn
+  ;; TODO: Hard-coded path
   (setq cygwin-bin "c:\\cygwin64\\bin")
   (setenv "PATH" (concat cygwin-bin ";"))
   (setq exec-path
-	'(cygwin-bin)))) 
+	'(cygwin-bin))))
+
+;; Add CSS Less to path
+(when (string-equal system-type "windows-nt")
+(progn
+  ;; TODO: Do something about this
+  (setenv "PATH" (concat "C:\\Users\\Nathan\\AppData\\Roaming\\npm;C:\\Program Files (x86)\\nodejs" ";"))
+  ))
 
 
 ;; Load Projectile
@@ -64,6 +75,12 @@
 
 
 
+;; Load/configure less-css-mode
+(setq load-path (append (list (expand-file-name "~/.emacs.d/less-css")) load-path))
+(autoload 'less-css-mode "less-css-mode" nil t)
+(add-to-list 'auto-mode-alist '("\\.less$" . less-css-mode))
+
+
 ;; Load/configure Steve Yegge's JS2 mode
 (setq load-path (append (list (expand-file-name "~/.emacs.d/js2")) load-path))
 (autoload 'js2-mode "js2" nil t)
@@ -77,6 +94,9 @@
 (add-to-list 'auto-mode-alist '("\\.py\\'" . python-mode))
 (add-to-list 'interpreter-mode-alist '("python" . python-mode))
 
+
+;; Load typescript-mode
+(autoload 'typescript-mode "typescript" "Typescript Mode" t)
 
 ;; Load/configure lua-mode
 (autoload 'lua-mode "lua-mode" "Lua editing mode." t)
@@ -102,8 +122,8 @@
 ;; Define convenience functions
 (defun open-files (files)
   (while files
-    (find-file (car files))
-    (setq files (cdr files))))
+	(find-file (car files))
+	(setq files (cdr files))))
 
 (defun kill-crap ()
   "Kill emacs buffers which I do not need"
@@ -114,12 +134,12 @@
 
   (setq l buffers)
   (while l
-    (setq b (car l))
-    (if (get-buffer b)
+	(setq b (car l))
+	(if (get-buffer b)
 	(kill-buffer b)
-      (message ""))
+	(message ""))
 
-    (setq l (cdr l))))
+	(setq l (cdr l))))
 
 
 (defun open-files-and-select-first (files)
@@ -133,7 +153,6 @@
   (kill-crap)
   (open-files-and-select-first files))
 
-
 (defun yank-n (n)
   "Yank n times"
 
@@ -146,25 +165,24 @@
 (defun projectile-non-project-buffers ()
   "Get a list of non-project buffers."
   (let* ((project-root (projectile-project-root))
-	 (all-buffers (-filter (lambda (buffer)
+	(all-buffers (-filter (lambda (buffer)
 				 (and
 				  (buffer-file-name buffer)
 				  (not (projectile-project-buffer-p buffer project-root))))
-                               (buffer-list))))
-    (if projectile-buffers-filter-function
-        (funcall projectile-buffers-filter-function all-buffers)
-      all-buffers)))
+						   (buffer-list))))
+	(if projectile-buffers-filter-function
+		(funcall projectile-buffers-filter-function all-buffers)
+	  all-buffers)))
 
 
 (defun projectile-kill-other-buffers ()
   "Kill all non-project buffers."
   (interactive)
   (let ((name (projectile-project-name))
-        (buffers (projectile-non-project-buffers)))
-    (if (yes-or-no-p
-         (format "Are you sure you want to kill %d buffer(s) outside '%s'? "
-                 (length buffers) name))
-        ;; we take care not to kill indirect buffers directly
-        ;; as we might encounter them after their base buffers are killed
-        (mapc 'kill-buffer (-remove 'buffer-base-buffer buffers)))))
-
+		(buffers (projectile-non-project-buffers)))
+	(if (yes-or-no-p
+		(format "Are you sure you want to kill %d buffer(s) outside '%s'? "
+			(length buffers) name))
+		;; we take care not to kill indirect buffers directly
+		;; as we might encounter them after their base buffers are killed
+		(mapc 'kill-buffer (-remove 'buffer-base-buffer buffers)))))
